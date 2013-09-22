@@ -91,7 +91,9 @@ public class Proj1{
 					}
 					
 				}		
-				seenWords.add(currentWord);
+				else{
+					seenWords.add(currentWord);
+				}
 			}
 			distance = 1;
 			while(!seenWords.isEmpty()){
@@ -215,7 +217,10 @@ public class Proj1{
             public void reduce(DoubleWritable key, Iterable<Text> values,
                     Context context) throws IOException, InterruptedException {
 		for(Text word:values){
-			context.write(new DoubleWritable(-1*key.get()),word);
+			if(n <= N_TO_OUTPUT){
+				context.write(new DoubleWritable(-1*key.get()),word);
+				n++;
+			}
 		}
                  // YOUR CODE HERE
 
