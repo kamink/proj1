@@ -64,7 +64,7 @@ public class Proj1{
             throws IOException, InterruptedException {
                 Matcher matcher = WORD_PATTERN.matcher(docContents.toString());
                 Func func = funcFromNum(funcNum);
-		ArrayDeque<String> seenWords = new ArrayDeque<String>;
+		ArrayDeque<String> seenWords = new ArrayDeque<String>();
                 // YOUR CODE HERE
 		boolean firstMatch = true;	
 		int distance;
@@ -84,7 +84,7 @@ public class Proj1{
 						while(!seenWords.isEmpty()){
 							context.write(new Text(seenWords.removeLast()),new DoublePair(1,func.f(distance)));
 							if(!seenWords.isEmpty()){
-								context.write(new Text(seenWords.removeFirst(),new DoublePair(1,func.f(distance))));
+								context.write(new Text(seenWords.removeFirst()),new DoublePair(1,func.f(distance)));
 							}
 							distance++;
 						}	
@@ -100,7 +100,7 @@ public class Proj1{
 				}
 				else{
 					context.write(new Text(seenWords.removeFirst()),new DoublePair(1,func.f(distance)));
-					distace++;
+					distance++;
 				}
 
 			}
@@ -171,9 +171,9 @@ public class Proj1{
 		}
 		double cooccur = 0;
 		if(sum2>0){
-			coocurr = sum2*Math.pow(Math.log(sum2),3)/sum1;
+			cooccur = sum2*Math.pow(Math.log(sum2),3)/sum1;
 		}
-		context.write(cooccur,key);			
+		context.write(new DoubleWritable(cooccur),key);			
                 // YOUR CODE HERE
 
             }
@@ -187,7 +187,7 @@ public class Proj1{
   	@Override		
            public void map(DoubleWritable key, Text value, Context context)
             throws IOException, InterruptedException {	
-		context.write(-1*key,value);
+		context.write(new DoubleWritable(-1*key.get()),value);
 		
 	}
    }
@@ -215,7 +215,7 @@ public class Proj1{
             public void reduce(DoubleWritable key, Iterable<Text> values,
                     Context context) throws IOException, InterruptedException {
 		for(Text word:values){
-			context.write(-1*key,word);
+			context.write(new DoubleWritable(-1*key.get()),word);
 		}
                  // YOUR CODE HERE
 
