@@ -32,7 +32,7 @@ public class Proj1{
     /*
      * Inputs is a set of (docID, document contents) pairs.
      */
-    public static class Map1 extends Mapper<WritableComparable, Text, Text, Text> {
+    public static class Map1 extends Mapper<WritableComparable, Text, Text, DoublePair> {
         /** Regex pattern to find words (alphanumeric + _). */
         final static Pattern WORD_PATTERN = Pattern.compile("\\w+");
 
@@ -53,14 +53,57 @@ public class Proj1{
                 }
             }
 
+
+
+	/*
+		input(docId, docContents) output(word, DoublePair(1(occurence),f(distanceFromTargetWord)) 
+	*/
+
         @Override
             public void map(WritableComparable docID, Text docContents, Context context)
             throws IOException, InterruptedException {
                 Matcher matcher = WORD_PATTERN.matcher(docContents.toString());
                 Func func = funcFromNum(funcNum);
-
+		ArrayDeque<String> seenWords = new ArrayDeque<String>;
                 // YOUR CODE HERE
-
+		boolean firstMatch = true;	
+		try{
+			while (matcher.find()){
+				String currentWord = matcher.group().toLowerCase();
+				if(currentWord.equals(targetGram)){
+					if(firstMatch){
+						firstMatch = false;	
+					}
+					else{	
+						int quLength = seenWords.size();
+						int midPoint = (quLength+1)/2;
+						int distance = 1;
+						int location = 1;
+						while(!seenWords.isEmpty()){	
+							String emitWord = seenWord.removeLast();	
+							context.write(new Text(emitWord),new DoublePair(1,func.f(distance)));
+					
+							if(location<midPoint){
+								distance++;
+							}
+							else if(quLength%2 == 0){
+								if(location>midPoint){
+									distance--;
+								}
+							}
+							else if(location<=MidPoint){
+									distance--;
+							}
+							location++;
+						}
+					}
+				}		
+				seenWords.add(currentWord);
+			}
+		}
+		catch(NoSuchElementException e){
+			System.err.println(e);	
+		}
             }
 
         /** Returns the Func corresponding to FUNCNUM*/
@@ -94,14 +137,20 @@ public class Proj1{
     }
 
     /** Here's where you'll be implementing your combiner. It must be non-trivial for you to receive credit. */
-    public static class Combine1 extends Reducer<Text, Text, Text, Text> {
+    public static class Combine1 extends Reducer<Text, DoublePair, Text, DoublePair> {
 
         @Override
-            public void reduce(Text key, Iterable<Text> values,
+            public void reduce(Text key, Iterable<DoublePair> values,
                     Context context) throws IOException, InterruptedException {
 
                  // YOUR CODE HERE
-
+		double sum1 = 0;
+		double sum2 = 0;
+		for(DoublePair duo: values){
+			sum1 += duo.getDouble1();
+			sum2 += duo.getDouble2();
+		}
+		context.write(key,new DoublePair(sum1,sum2));
             }
     }
 
