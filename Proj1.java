@@ -67,38 +67,42 @@ public class Proj1{
 		ArrayDeque<String> seenWords = new ArrayDeque<String>;
                 // YOUR CODE HERE
 		boolean firstMatch = true;	
+		int distance;
 		try{
 			while (matcher.find()){
+				distance = 1;
 				String currentWord = matcher.group().toLowerCase();
 				if(currentWord.equals(targetGram)){
 					if(firstMatch){
 						firstMatch = false;	
-					}
-					else{	
-						int quLength = seenWords.size();
-						int midPoint = (quLength+1)/2;
-						int distance = 1;
-						int location = 1;
-						while(!seenWords.isEmpty()){	
-							String emitWord = seenWord.removeLast();	
-							context.write(new Text(emitWord),new DoublePair(1,func.f(distance)));
-					
-							if(location<midPoint){
-								distance++;
-							}
-							else if(quLength%2 == 0){
-								if(location>midPoint){
-									distance--;
-								}
-							}
-							else if(location<=MidPoint){
-									distance--;
-							}
-							location++;
+						while(!seenWords.isEmpty()){
+							context.write(new Text(seenWords.removeLast()),new DoublePair(1,func.f(distance)));
+							distance++;			
 						}
 					}
+					else{	
+						while(!seenWords.isEmpty()){
+							context.write(new Text(seenWords.removeLast()),new DoublePair(1,func.f(distance)));
+							if(!seenWords.isEmpty()){
+								context.write(new Text(seenWords.removeFirst(),new DoublePair(1,func.f(distance))));
+							}
+							distance++;
+						}	
+					}
+					
 				}		
 				seenWords.add(currentWord);
+			}
+			distance = 1;
+			while(!seenWords.isEmpty()){
+				if(firstMatch){
+					context.write(new Text(seenWords.removeLast()),new DoublePair(1,func.f(Double.POSITIVE_INFINITY)));
+				}
+				else{
+					context.write(new Text(seenWords.removeFirst()),new DoublePair(1,func.f(distance)));
+					distace++;
+				}
+
 			}
 		}
 		catch(NoSuchElementException e){
@@ -155,11 +159,21 @@ public class Proj1{
     }
 
 
-    public static class Reduce1 extends Reducer<Text, Text, DoubleWritable, Text> {
+    public static class Reduce1 extends Reducer<Text, DoublePair, DoubleWritable, Text> {
         @Override
-            public void reduce(Text key, Iterable<Text> values,
+            public void reduce(Text key, Iterable<DoublePair> values,
                     Context context) throws IOException, InterruptedException {
-
+		double sum1 = 0;
+		double sum2 = 0;
+		for(DoublePair duo: values){
+			sum1 += duo.getDouble1();
+			sum2 += duo.getDouble2();
+		}
+		double cooccur = 0;
+		if(sum2>0){
+			coocurr = sum2*Math.pow(Math.log(sum2),3)/sum1;
+		}
+		context.write(cooccur,key);			
                 // YOUR CODE HERE
 
             }
@@ -167,7 +181,16 @@ public class Proj1{
 
     public static class Map2 extends Mapper<DoubleWritable, Text, DoubleWritable, Text> {
         //maybe do something, maybe don't
-    }
+  	/*
+		Takes reducer1's (key, value) and returns (-key, value) to assert correct order	
+	*/ 
+  	@Override		
+           public void map(DoubleWritable key, Text value, Context context)
+            throws IOException, InterruptedException {	
+		context.write(-1*key,value);
+		
+	}
+   }
 
     public static class Reduce2 extends Reducer<DoubleWritable, Text, DoubleWritable, Text> {
 
@@ -191,7 +214,9 @@ public class Proj1{
         @Override
             public void reduce(DoubleWritable key, Iterable<Text> values,
                     Context context) throws IOException, InterruptedException {
-
+		for(Text word:values){
+			context.write(-1*key,word);
+		}
                  // YOUR CODE HERE
 
             }
@@ -254,7 +279,7 @@ public class Proj1{
 
             /* You may need to change things here */
             firstJob.setMapOutputKeyClass(Text.class);
-            firstJob.setMapOutputValueClass(Text.class);
+            firstJob.setMapOutputValueClass(DoublePair.class);
             firstJob.setOutputKeyClass(DoubleWritable.class);
             firstJob.setOutputValueClass(Text.class);
             /* End region where we expect you to perhaps need to change things. */
